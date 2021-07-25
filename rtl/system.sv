@@ -283,7 +283,7 @@ fx68k M68K
 	.IPL0n(M68K_IPL_N[0]),
 	.IPL1n(M68K_IPL_N[1]),
 	.IPL2n(M68K_IPL_N[2]),
-	.iEdb(genie_ovr ? genie_data : M68K_MBUS_D),
+	.iEdb(genie_data),
 	.oEdb(M68K_DO),
 	.eab(M68K_A)
 );
@@ -296,19 +296,17 @@ assign DBG_VBUS_A = {VBUS_A,1'b0};
 // CHEAT CODES
 //--------------------------------------------------------------
 
-wire genie_ovr;
 wire [15:0] genie_data;
-
-CODES #(.ADDR_WIDTH(24), .DATA_WIDTH(16)) codes (
+CODES #(.ADDR_WIDTH(24), .DATA_WIDTH(16), .BIG_ENDIAN(1)) codes
+(
 	.clk(MCLK),
 	.reset(LOADING | GG_RESET),
 	.enable(~GG_EN),
-	.addr_in({M68K_A[23:1], 1'b0}),
-	.data_in(M68K_MBUS_D),
 	.code(GG_CODE),
 	.available(GG_AVAILABLE),
-	.genie_ovr(genie_ovr),
-	.genie_data(genie_data)
+	.addr_in({M68K_A[23:1], 1'b0}),
+	.data_in(M68K_MBUS_D),
+	.data_out(genie_data)
 );
 
 
