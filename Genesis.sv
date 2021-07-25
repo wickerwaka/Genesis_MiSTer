@@ -1073,7 +1073,7 @@ end
 reg       VDP_BGA_EN = 1;
 reg       VDP_BGB_EN = 1;
 reg       VDP_SPR_EN = 1;
-reg [1:0] VDP_GRID_EN = '0;
+//reg [1:0] VDP_GRID_EN = '0;
 reg       DBG_PAUSE_EN = 0;
 
 `ifdef DEBUG_BUILD
@@ -1088,7 +1088,7 @@ always @(posedge clk_sys) begin
 			'h003: begin VDP_BGA_EN <= ~VDP_BGA_EN; end 	// F5
 			'h00B: begin VDP_BGB_EN <= ~VDP_BGB_EN; end 	// F6
 			'h083: begin VDP_SPR_EN <= ~VDP_SPR_EN; end 	// F7
-			'h00A: begin VDP_GRID_EN <= VDP_GRID_EN + 2'd1; end 	// F8
+			//'h00A: begin VDP_GRID_EN <= VDP_GRID_EN + 2'd1; end 	// F8
 			'h001: begin DBG_PAUSE_EN <= ~DBG_PAUSE_EN; end 	// F9
 		endcase
 	end
