@@ -49,6 +49,7 @@ module system
 	input         EXPORT,
 	input         FAST_FIFO,
 	input         SRAM_QUIRK,
+	input         SRAMFF_QUIRK,
 	input         EEPROM_QUIRK,
 	input         NORAM_QUIRK,
 	input         PIER_QUIRK,
@@ -649,7 +650,7 @@ dpram_dif #(17,8,16,16) sram
 	.q_a(sram_q),
 
 	.address_b(LOADING ? ram_rst_a : SVP_QUIRK ? SVP_DRAM_A : BRAM_A),
-	.data_b(LOADING ? 16'h0000 : SVP_QUIRK ? SVP_DRAM_DO : BRAM_DI),
+	.data_b(LOADING ? SRAMFF_QUIRK ? 16'h0000 : 16'hFFFF : SVP_QUIRK ? SVP_DRAM_DO : BRAM_DI),
 	.wren_b(LOADING | SVP_DRAM_WE | BRAM_WE),
 	.q_b(BRAM_DO)
 );
@@ -918,6 +919,11 @@ always @(posedge MCLK) begin
 						mstate <= MBUS_FINISH;
 					end
 					else if (SRAM_QUIRK && {MBUS_A,1'b0} == 'h200000) begin
+						SRAM_SEL <= 1;
+						mstate <= MBUS_SRAM_READ;
+					end
+					// Initializes SRAM to 0x0 for Sonic 1 Remastered, all other games have SRAM initialized to 0xFF
+					else if (SRAMFF_QUIRK && {MBUS_A,1'b0} == 'h200000) begin
 						SRAM_SEL <= 1;
 						mstate <= MBUS_SRAM_READ;
 					end

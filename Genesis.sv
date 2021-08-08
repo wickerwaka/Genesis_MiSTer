@@ -488,6 +488,7 @@ system system
 	.EXPORT(|status[7:6]),
 	.PAL(PAL),
 	.SRAM_QUIRK(sram_quirk),
+	.SRAMFF_QUIRK(sramff_quirk),
 	.EEPROM_QUIRK(eeprom_quirk),
 	.NORAM_QUIRK(noram_quirk),
 	.PIER_QUIRK(pier_quirk),
@@ -892,6 +893,7 @@ always @(posedge clk_sys) begin
 end
 
 reg sram_quirk = 0;
+reg sramff_quirk = 0;
 reg eeprom_quirk = 0;
 reg fifo_quirk = 0;
 reg noram_quirk = 0;
@@ -906,7 +908,7 @@ always @(posedge clk_sys) begin
 	reg old_download;
 	old_download <= cart_download;
 
-	if(~old_download && cart_download) {fifo_quirk,eeprom_quirk,sram_quirk,noram_quirk,pier_quirk,svp_quirk,fmbusy_quirk,schan_quirk} <= 0;
+	if(~old_download && cart_download) {fifo_quirk,eeprom_quirk,sram_quirk,sramff_quirk,noram_quirk,pier_quirk,svp_quirk,fmbusy_quirk,schan_quirk} <= 0;
 
 	if(ioctl_wr & cart_download) begin
 		if(ioctl_addr == 'h182) cart_id[63:56] <= ioctl_data[15:8];
@@ -939,6 +941,7 @@ always @(posedge clk_sys) begin
 			else if(cart_id == "T-25073 ") fmbusy_quirk <= 1; // Hellfire JP
 			else if(cart_id == "MK-1137-") fmbusy_quirk <= 1; // Hellfire EU
 			else if(cart_id == "T-68???-") schan_quirk  <= 1; // Game no Kanzume Otokuyou
+			else if(cart_id == " GM 0000") sramff_quirk <= 1; // Sonic 1 Remastered
 			
 			// Lightgun device and timing offsets
 			if(cart_id == "MK-1533 ") begin						  // Body Count
