@@ -252,7 +252,7 @@ localparam CONF_STR = {
 	"FS,BINGENMD ;",
 	"-;",
 	"O67,Region,JP,US,EU;",
-	"O89,Auto Region,File Ext,Header,Disabled;",
+	"O89,Auto Region,Header,File Ext,Disabled;",
 	"D2ORS,Priority,US>EU>JP,EU>US>JP,US>JP>EU,JP>US>EU;",
 	"-;",
 	"C,Cheats;",
@@ -826,7 +826,7 @@ always @(posedge clk_sys) begin
 
 	old_ready <= cart_hdr_ready;
 	if(~status[9] & ~old_ready & cart_hdr_ready) begin
-		if(status[8]) begin
+		if(~status[8]) begin
 			region_set <= 1;
 			case(status[28:27])
 				0: if(hdr_u) region_req <= 1;
