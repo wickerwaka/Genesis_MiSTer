@@ -66,7 +66,7 @@ endmodule
 // Retrieval info: 	<generic name="gui_fractional_cout" value="32" />
 // Retrieval info: 	<generic name="gui_dsm_out_sel" value="1st_order" />
 // Retrieval info: 	<generic name="gui_use_locked" value="true" />
-// Retrieval info: 	<generic name="gui_en_adv_params" value="true" />
+// Retrieval info: 	<generic name="gui_en_adv_params" value="false" />
 // Retrieval info: 	<generic name="gui_number_of_clocks" value="2" />
 // Retrieval info: 	<generic name="gui_multiply_factor" value="8" />
 // Retrieval info: 	<generic name="gui_frac_multiply_factor" value="2537930535" />
