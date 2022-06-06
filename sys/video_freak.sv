@@ -27,7 +27,7 @@ module video_freak
 	input             VGA_DE_IN,
 	input      [11:0] ARX,
 	input      [11:0] ARY,
-	input      [11:0] CROP_SIZE,
+	input      [12:0] CROP_SIZE, // [12] indicates automatic cropping
 	input       [4:0] CROP_OFF, // -16...+15
 	input       [2:0] SCALE     //0 - normal, 1 - V-integer, 2 - HV-Integer-, 3 - HV-Integer+, 4 - HV-Integer
 );
@@ -38,10 +38,20 @@ reg  [11:0] mul_arg1, mul_arg2;
 wire [23:0] mul_res;
 sys_umul #(12,12) mul(CLK_VIDEO,mul_start,mul_run, mul_arg1,mul_arg2,mul_res);
 
+reg         div_start;
+wire        div_run;
+reg  [11:0] div_num;
+reg  [11:0] div_den;
+wire [11:0] div_res;
+wire [11:0] div_rem;
+sys_udiv #(12,12) div(CLK_VIDEO,div_start,div_run, div_num,div_den,div_res,div_rem);
+
 reg        vde;
 reg [11:0] arxo,aryo;
 reg [11:0] vsize;
 reg [11:0] hsize;
+
+wire CROP_AUTO = CROP_SIZE[12];
 
 always @(posedge CLK_VIDEO) begin
 	reg        old_de, old_vs,ovde;
@@ -50,7 +60,7 @@ always @(posedge CLK_VIDEO) begin
 	reg [11:0] vadj;
 	reg [23:0] ARXG,ARYG;
 	reg [11:0] arx,ary;
-	reg  [1:0] vcalc;
+	reg  [2:0] vcalc;
 
 	if (CE_PIXEL) begin
 		old_de <= VGA_DE_IN;
@@ -58,8 +68,16 @@ always @(posedge CLK_VIDEO) begin
 		if (VGA_VS & ~old_vs) begin
 			vcpt  <= 0;
 			vtot  <= vcpt;
-			vcalc <= 1;
-			vcrop <= (CROP_SIZE >= vcpt) ? 12'd0 : CROP_SIZE;
+			if (CROP_AUTO)
+				vcalc <= 1;
+			else if (CROP_SIZE[11:0] >= vcpt) begin
+				vcrop <= 12'd0;
+				vcalc <= 0;
+			end
+			else begin
+				vcalc <= 4;
+				vcrop <= CROP_SIZE[11:0];
+			end
 		end
 		
 		if (VGA_DE_IN) hcpt <= hcpt + 1'd1;
@@ -76,33 +94,55 @@ always @(posedge CLK_VIDEO) begin
 	vsize <= vcrop ? vcrop : vtot;
 	
 	mul_start <= 0;
+	div_start <= 0;
 
-	if(!vcrop || !ary || !arx) begin
-		arxo  <= arx;
-		aryo  <= ary;
-	end
-	else if (vcalc) begin
-		if(~mul_start & ~mul_run) begin
-			vcalc <= vcalc + 1'd1;
+	if (vcalc) begin
+		if(~mul_start & ~mul_run & ~div_start & ~div_run) begin
+			vcalc <= vcalc + 3'd1;
 			case(vcalc)
-				1: begin
+				1: if (CROP_AUTO) begin
+						// divide height by vtot
+						div_num <= HDMI_HEIGHT;
+						div_den <= vtot;
+						div_start <= 1;
+					end
+				2: if (CROP_AUTO) begin
+						if (div_rem == 12'd0) begin
+							vcalc <= 0;
+							vcrop <= 12'd0;
+						end
+						else begin
+							div_num <= HDMI_HEIGHT;
+							div_den <= div_res + 12'd1;
+							div_start <= 1;
+						end
+					end
+				3: if (CROP_AUTO) begin
+						vcrop <= div_res;
+					end
+				4: begin
 						mul_arg1  <= arx;
 						mul_arg2  <= vtot;
 						mul_start <= 1;
 					end
 
-				2: begin
+				5: begin
 						ARXG      <= mul_res;
 						mul_arg1  <= ary;
 						mul_arg2  <= vcrop;
 						mul_start <= 1;
 					end
 
-				3: begin
+				6: begin
 						ARYG      <= mul_res;
+						vcalc     <= 0;
 					end
 			endcase
 		end
+	end
+	else if(!vcrop || !ary || !arx) begin
+		arxo  <= arx;
+		aryo  <= ary;
 	end
 	else if (ARXG[23] | ARYG[23]) begin
 		arxo <= ARXG[23:12];
